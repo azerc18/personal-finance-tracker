@@ -1,0 +1,22 @@
+# Mật khẩu và thông tin nhạy cảm
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Build
+target/
+*.class
+*.jar
+*.war
+
+# Log
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
