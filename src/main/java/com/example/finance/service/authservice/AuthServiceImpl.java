@@ -65,10 +65,9 @@ public class AuthServiceImpl implements AuthService{
         noti.setDailyReminder(false);
         noti.setTipsEnabled(false);
         noti.setBudgetAlert(true);
-        tokenService.createAndSendToken(request.getEmail());
-
         notificationRepo.save(noti);
 
+        tokenService.createAndSendToken(request.getEmail());
 
         //Trả Response cho Controller
         return new RegisterResponse(

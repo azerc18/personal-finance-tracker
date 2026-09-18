@@ -27,6 +27,7 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public CategoryResponse getAll() {
+
         List<Category> allCategories = categoryRepo.findAll();
 
         List<CategoryResponse.CategoryData> incomeList = allCategories.stream()

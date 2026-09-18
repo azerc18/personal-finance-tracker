@@ -20,7 +20,7 @@ public class CategoryController {
 
     @PreAuthorize("hasAuthority('VIEW')")
     @GetMapping
-    public ApiResponse<CategoryResponse> getAll(){
+    public ApiResponse<CategoryResponse> getAll(@AuthenticationPrincipal UserDetails userDetails){
         CategoryResponse list = categoryService.getAll();
 
         return new ApiResponse<CategoryResponse>(true, "Category list fetched successfully", list);

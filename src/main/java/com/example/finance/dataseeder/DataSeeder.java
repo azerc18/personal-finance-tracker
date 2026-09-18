@@ -58,7 +58,9 @@ public class DataSeeder implements CommandLineRunner {
         userRole.setName(RoleName.USER);
         userRole.setAuthorities(Set.of(
                 authorityMap.get("CREATE"),
-                authorityMap.get("VIEW")
+                authorityMap.get("VIEW"),
+                authorityMap.get("DELETE"),
+                authorityMap.get("UPDATE")
         ));
 
         roleRepo.save(userRole);
@@ -76,6 +78,7 @@ public class DataSeeder implements CommandLineRunner {
                     .email("user@gmail.com")
                     .password(passwordEncoder.encode("user123"))
                     .roles(Set.of(userRole))
+                    .isEnabled(true)
                     .build();
 
             Notification notification = new Notification();
@@ -95,6 +98,7 @@ public class DataSeeder implements CommandLineRunner {
                     .email("admin@gmail.com")
                     .password(passwordEncoder.encode("admin123"))
                     .roles(Set.of(adminRole))
+                    .isEnabled(true)
                     .build();
 
             Notification notification = new Notification();
