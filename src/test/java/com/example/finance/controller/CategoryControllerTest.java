@@ -82,7 +82,7 @@ class CategoryControllerTest {
                     List.of(expenseData)
             );
 
-            when(categoryService.getAll()).thenReturn(mockResponse);
+            when(categoryService.getAll(any())).thenReturn(mockResponse);
 
             mockMvc.perform(get("/api/categories"))
                     .andExpect(status().isOk())
@@ -103,7 +103,7 @@ class CategoryControllerTest {
             CategoryResponse emptyResponse = new CategoryResponse(List.of(), List.of());
 
             // Stubbing đúng kiểu dữ liệu
-            when(categoryService.findByType("INCOME")).thenReturn(emptyResponse);
+            when(categoryService.findByType(eq("INCOME"), any())).thenReturn(emptyResponse);
 
             mockMvc.perform(get("/api/categories/search?type=INCOME"))
                     .andExpect(status().isOk())
@@ -122,7 +122,7 @@ class CategoryControllerTest {
 
             CategoryResponse mockResponse = new CategoryResponse(List.of(), List.of(expenseData));
 
-            when(categoryService.findByType("EXPENSE")).thenReturn(mockResponse);
+            when(categoryService.findByType(eq("EXPENSE"), any())).thenReturn(mockResponse);
 
             mockMvc.perform(get("/api/categories/search").param("type", "EXPENSE"))
                     .andDo(print())

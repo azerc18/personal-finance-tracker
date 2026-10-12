@@ -198,7 +198,7 @@ public class ReportServiceImpl implements ReportService{
         String filePath =  fileStorageService.saveFile(pdfContent, fileName);
 
         try{
-            emailGenerator.getEmailReport(request.getEmail(), filePath, fileName);
+            emailGenerator.getEmailReport(user.getEmail(), filePath, fileName);
         }catch (MessagingException ex){
             throw new RuntimeException("Error: " + ex.getMessage());
         }

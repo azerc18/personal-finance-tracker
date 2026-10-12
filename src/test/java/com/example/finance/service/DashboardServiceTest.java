@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,9 +25,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Service Test – TransactionService & DashboardService
@@ -64,7 +66,7 @@ import static org.mockito.Mockito.*;
             when(transactionRepository.getTotalIncome(user)).thenReturn(BigDecimal.valueOf(2000.0));
 
             when(transactionRepository.getPieChart(user)).thenReturn(List.of());
-            when(transactionRepository.findTop3ByUserOrderByDateDesc(user)).thenReturn(List.of());
+            when(transactionRepository.findRecentWithCategory(user, PageRequest.of(0, 3))).thenReturn(List.of());
 
             DashboardResponse res = dashboardService.getDashboard(user.getEmail());
 
@@ -77,9 +79,9 @@ import static org.mockito.Mockito.*;
          * TC-DASH-04 – recentTransactions tối đa 3 phần tử
          */
         @Test
-        @DisplayName("TC-DASH-04: recentTransactions tối đa 3 phần tử dù có nhiều hơn")
+        @DisplayName("TC-DASH-04: recentTransactions lấy tối đa 3 phần tử (giới hạn ở DB qua PageRequest.of(0, 3))")
         void getDashboard_recentTransactionsMaxThree() {
-            List<Transaction> fiveTransactions = List.of(
+            List<Transaction> threeTransactions = List.of(
                     buildTransaction(BigDecimal.valueOf(100.0), "EXPENSE", LocalDate.of(2024, 4, 28)),
                     buildTransaction(BigDecimal.valueOf(200.0), "EXPENSE", LocalDate.of(2024, 4, 27)),
                     buildTransaction(BigDecimal.valueOf(300.0), "INCOME",  LocalDate.of(2024, 4, 26))
@@ -87,8 +89,8 @@ import static org.mockito.Mockito.*;
 
             when(userRepo.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-            when(transactionRepository.findTop3ByUserOrderByDateDesc(eq(user)))
-                    .thenReturn(fiveTransactions);
+            when(transactionRepository.findRecentWithCategory(user, PageRequest.of(0, 3)))
+                    .thenReturn(threeTransactions);
 
             DashboardResponse res = dashboardService.getDashboard(user.getEmail());
 
@@ -114,7 +116,7 @@ import static org.mockito.Mockito.*;
             Transaction t3 = buildTransaction(BigDecimal.valueOf(300.0), "EXPENSE", LocalDate.of(2024, 4, 22)); // cũ nhất
 
 
-            when(transactionRepository.findTop3ByUserOrderByDateDesc(user))
+            when(transactionRepository.findRecentWithCategory(user, PageRequest.of(0, 3)))
                     .thenReturn(List.of(t1, t2, t3));
 
             DashboardResponse res = dashboardService.getDashboard(user.getEmail());
@@ -144,7 +146,7 @@ import static org.mockito.Mockito.*;
             when(userRepo.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
             DashboardResponse.pieChartData mockPieData = new DashboardResponse.pieChartData("Housing", BigDecimal.valueOf(800.0), CategoryName.EXPENSE);
 
-            when(transactionRepository.findTop3ByUserOrderByDateDesc(eq(user)))
+            when(transactionRepository.findRecentWithCategory(user, PageRequest.of(0, 3)))
                     .thenReturn(List.of(t1, t2));
             when(transactionRepository.getPieChart(user))
                     .thenReturn(List.of(mockPieData));
@@ -171,7 +173,7 @@ import static org.mockito.Mockito.*;
 
             when(transactionRepository.getPieChart(user)).thenReturn(List.of());
 
-            when(transactionRepository.findTop3ByUserOrderByDateDesc(user)).thenReturn(List.of());
+            when(transactionRepository.findRecentWithCategory(user, PageRequest.of(0, 3))).thenReturn(List.of());
 
             DashboardResponse res = dashboardService.getDashboard(user.getEmail());
 
@@ -190,12 +192,12 @@ import static org.mockito.Mockito.*;
         void getDashboard_queriesOnlyCurrentUserId() {
             when(userRepo.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-            when(transactionRepository.findTop3ByUserOrderByDateDesc(eq(user)))
+            when(transactionRepository.findRecentWithCategory(user, PageRequest.of(0, 3)))
                     .thenReturn(List.of());
 
             dashboardService.getDashboard(user.getEmail());
 
-            verify(transactionRepository).findTop3ByUserOrderByDateDesc(eq(user));
+            verify(transactionRepository).findRecentWithCategory(user, PageRequest.of(0, 3));
             // Không bao giờ query user_id khác
         }
 

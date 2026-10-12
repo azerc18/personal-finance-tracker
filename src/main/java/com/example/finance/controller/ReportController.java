@@ -45,8 +45,7 @@ public class ReportController {
     public ApiResponse<ReportPDFResponse> exportPdfReport(@Valid @RequestBody ReportPDFRequest request,
                                                           @AuthenticationPrincipal UserDetails userDetails) {
         ReportPDFResponse response = reportService.getPdfReport(request, userDetails.getUsername());
-        System.out.println("Da toi");
-            return new ApiResponse<>(true, "Success", reportService.getPdfReport(request, userDetails.getUsername()));
+        return new ApiResponse<>(true, "Success", response);
     }
 
     @PostMapping("export/email")
@@ -55,6 +54,6 @@ public class ReportController {
                                                @AuthenticationPrincipal UserDetails userDetails){
 
         reportService.getEmailReport(request, userDetails.getUsername());
-        return new ApiResponse<>(true,"Report sent successfully to " + request.getEmail());
+        return new ApiResponse<>(true,"Report is being sent to your email");
     }
 }

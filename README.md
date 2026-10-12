@@ -19,7 +19,9 @@ A REST API for personal finance management, built with Spring Boot. It allows us
 - **Database:** MySQL 8.0+
 - **Auth:** JWT (jjwt)
 - **Reporting:** OpenPDF (PDF export), JFreeChart (charts)
-- **Build Tool:** Maven
+- **Testing:** JUnit 5, Mockito, MockMvc, H2
+- **API Docs:** springdoc-openapi (Swagger UI)
+- **Build Tool:** Maven, Docker Compose (MySQL)
 
 ## Project Structure
 
@@ -36,38 +38,49 @@ A REST API for personal finance management, built with Spring Boot. It allows us
 ## Getting Started
 
 ### Prerequisites
-- Java 17
-- MySQL 8.0+
-- Maven
+- Java 17+
+- Docker (for MySQL) — or a local MySQL 8.0+
+- Maven (or use the bundled `./mvnw`)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/azerc18/demo.git
-   cd demo
+   git clone https://github.com/azerc18/personal-finance-tracker.git
+   cd personal-finance-tracker
    ```
 
 2. **Configure environment variables**
 
-   Copy the sample file and fill in your own values:
+   Copy the sample file and fill in your own values (the app loads `.env` automatically):
    ```bash
    cp .env-sample .env
    ```
    | Variable | Description |
-      |---|---|
-   | `DB_USERNAME` | MySQL username |
+   |---|---|
+   | `DB_USERNAME` | MySQL username (use `root` with the bundled Docker setup) |
    | `DB_PASSWORD` | MySQL password |
-   | `JWT_SECRET` | Secret key used to sign JWT tokens |
+   | `JWT_SECRET` | Base64-encoded key (at least 32 bytes) used to sign JWT tokens |
+   | `MAIL_USERNAME` | Gmail address used to send verification and report emails |
+   | `MAIL_PASSWORD` | Gmail app password |
 
-3. **Create the database**
-   ```sql
-   CREATE DATABASE demo;
+3. **Start MySQL**
+   ```bash
+   docker compose up -d
    ```
+   This creates the `demo` database. If you use a local MySQL instead, run `CREATE DATABASE demo;`.
 
 4. **Run the application**
-
-   Open the project in your IDE and run the `DemoApplication` class, or use Maven:
    ```bash
    ./mvnw spring-boot:run
    ```
+   API docs (Swagger UI): http://localhost:8080/swagger-ui.html
+
+   Demo account created by the data seeder: `user@gmail.com` / `user123`
+
+## Running Tests
+
+```bash
+./mvnw test
+```
+Tests run against an in-memory H2 database, so no MySQL or `.env` is needed.

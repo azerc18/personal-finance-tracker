@@ -63,31 +63,40 @@ public interface TransactionRepo extends JpaRepository<Transaction, Long> {
                 @Param("year") int year
         );
 
-    @Query("SELECT t FROM Transaction t " +
-            "WHERE t.user = :user " +
-            "AND month(t.date) = :month " +
-            "AND year(t.date) = :year")
+    @Query("""
+            SELECT t FROM Transaction t  
+            JOIN FETCH t.category c
+            LEFT JOIN FETCH c.categoryIcon
+            WHERE t.user = :user  
+            AND month(t.date) = :month  
+            AND year(t.date) = :year""")
     List<Transaction> findByUserAndMonthAndYear(
             @Param("user") User user,
             @Param("month") int month,
             @Param("year") int year
     );
 
-    List<Transaction> findTop3ByUserOrderByDateDesc(User user);
+    @Query("""
+    SELECT t FROM Transaction t
+    JOIN FETCH t.category c
+    LEFT JOIN FETCH c.categoryIcon
+    WHERE t.user = :user
+    ORDER BY t.date DESC
+    """)
+    List<Transaction> findRecentWithCategory(@Param("user") User user, Pageable pageable);
 
     @Query("""
     SELECT t FROM Transaction t
+    JOIN FETCH t.category c
+    LEFT JOIN FETCH c.categoryIcon
     WHERE t.user = :user
     AND t.date BETWEEN :startDate AND :endDate
-    AND (:type IS NULL OR t.category.type = :type)
+    AND (:type IS NULL OR c.type = :type)
     ORDER BY t.date DESC
     """)
-    List<Transaction> findTransactionsHistory(
-            User user,
-            CategoryName type,
-            LocalDate startDate,
-            LocalDate endDate
-    );
+    List<Transaction> findTransactionsHistory(@Param("user") User user, @Param("type") CategoryName type,
+                                              @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
     @Query(value = "select month(t.date) as month, " +
             "coalesce(sum(case when c.type = 'INCOME' then t.amount else 0 end), 0 ) as income, " +
             "coalesce(sum(case when c.type = 'EXPENSE' then t.amount else 0 end), 0 ) as expense " +

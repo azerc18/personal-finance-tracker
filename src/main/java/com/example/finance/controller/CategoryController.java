@@ -21,15 +21,15 @@ public class CategoryController {
     @PreAuthorize("hasAuthority('VIEW')")
     @GetMapping
     public ApiResponse<CategoryResponse> getAll(@AuthenticationPrincipal UserDetails userDetails){
-        CategoryResponse list = categoryService.getAll();
+        CategoryResponse list = categoryService.getAll(userDetails.getUsername());
 
         return new ApiResponse<CategoryResponse>(true, "Category list fetched successfully", list);
     }
 
     @PreAuthorize("hasAuthority('VIEW')")
     @GetMapping({"/search"})
-    public ApiResponse<CategoryResponse> getByType (@RequestParam String type){
-        CategoryResponse list = categoryService.findByType(type.toUpperCase());
+    public ApiResponse<CategoryResponse> getByType (@RequestParam String type, @AuthenticationPrincipal UserDetails userDetails){
+        CategoryResponse list = categoryService.findByType(type.toUpperCase(),userDetails.getUsername());
 
         return new ApiResponse<>(true, "Category list fetched successfully", list);
     }

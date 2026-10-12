@@ -147,7 +147,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("TC-AUTH-LOGIN-07: Nhiều field invalid trả về 422 với danh sách lỗi")
         void login_multipleInvalidFields_returns422WithErrorList() throws Exception {
-            LoginRequest req = new LoginRequest("abc123", "123");
+            LoginRequest req = new LoginRequest("not-an-email", "");
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))

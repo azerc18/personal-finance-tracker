@@ -24,8 +24,8 @@ public class VerificationTokenServiceImpl implements VerificationTokenService{
     private final EmailGenerator emailGenerator;
     private final EmailVerifyTokenRepo emailVerifyTokenRepo;
 
-    @Value("${app.jwt.expiration-seconds}")
-    private int tokenExpiryHours;
+    @Value("${app.verification.expiry-hours:24}")
+    private long tokenExpiryHours;
 
     @Override
     @Transactional

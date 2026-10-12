@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -197,9 +198,10 @@ class CategoryServiceTest {
         void getAllCategories_noFilter_returnsBothGroups() {
             Category expense = buildCategory(1L, "Food", "EXPENSE");
             Category income  = buildCategory(4L, "Salary", "INCOME");
-            when(categoryRepository.findAll()).thenReturn(List.of(expense, income));
+            when(userRepo.findByEmail(currentUser.getEmail())).thenReturn(Optional.of(currentUser));
+            when(categoryRepository.findByUser(currentUser)).thenReturn(List.of(expense, income));
 
-            CategoryResponse result = categoryService.getAll();
+            CategoryResponse result = categoryService.getAll(currentUser.getEmail());
 
             assertThat(result).isInstanceOf(CategoryResponse.class);
 
@@ -218,9 +220,10 @@ class CategoryServiceTest {
         void getAllCategories_filterExpense_returnsOnlyExpense() {
             Category food     = buildCategory(1L, "Food",     "EXPENSE");
             Category shopping = buildCategory(2L, "Shopping", "EXPENSE");
-            when(categoryRepository.findByType(CategoryName.valueOf("EXPENSE"))).thenReturn(List.of(food, shopping));
+            when(userRepo.findByEmail(currentUser.getEmail())).thenReturn(Optional.of(currentUser));
+            when(categoryRepository.findByUserAndType(currentUser, CategoryName.EXPENSE)).thenReturn(List.of(food, shopping));
 
-            CategoryResponse result = categoryService.findByType("EXPENSE");
+            CategoryResponse result = categoryService.findByType("EXPENSE", currentUser.getEmail());
 
             assertThat(result).isInstanceOf(CategoryResponse.class);
             assertThat(result.getExpense()).hasSize(2);
@@ -234,9 +237,10 @@ class CategoryServiceTest {
         @Test
         @DisplayName("TC-CAT-LIST-04: Không có category khớp type trả về list rỗng")
         void getAllCategories_noMatch_returnsEmptyList() {
-            when(categoryRepository.findByType(CategoryName.INCOME)).thenReturn(List.of());
+            when(userRepo.findByEmail(currentUser.getEmail())).thenReturn(Optional.of(currentUser));
+            when(categoryRepository.findByUserAndType(currentUser, CategoryName.INCOME)).thenReturn(List.of());
 
-            CategoryResponse result = categoryService.findByType("INCOME");
+            CategoryResponse result = categoryService.findByType("INCOME", currentUser.getEmail());
 
             assertThat(result).isExactlyInstanceOf(CategoryResponse.class);
 
@@ -253,11 +257,64 @@ class CategoryServiceTest {
             Category food = buildCategory(1L, "Food", "EXPENSE");
             food.getCategoryIcon().setIconUrl("https://cdn.example.com/food.png");
 
-            when(categoryRepository.findByType(CategoryName.EXPENSE)).thenReturn(List.of(food));
+            when(userRepo.findByEmail(currentUser.getEmail())).thenReturn(Optional.of(currentUser));
+            when(categoryRepository.findByUserAndType(eq(currentUser), eq(CategoryName.EXPENSE))).thenReturn(List.of(food));
 
-            CategoryResponse result = categoryService.findByType("EXPENSE");
+            CategoryResponse result = categoryService.findByType("EXPENSE", currentUser.getEmail());
 
             assertThat(result.getExpense()).allMatch(c -> c.getIconUrl() != null && !c.getIconUrl().isBlank());
+        }
+
+        /**
+         * TC-CAT-LIST-07 – Chỉ trả về category của user đang đăng nhập (không lộ dữ liệu user khác)
+         */
+        @Test
+        @DisplayName("TC-CAT-LIST-07: getAll chỉ query category theo user đang đăng nhập, không dùng findAll")
+        void getAllCategories_onlyReturnsCurrentUsersCategories() {
+            User otherUser = new User();
+            otherUser.setId(2L);
+            otherUser.setEmail("other@example.com");
+
+            Category mine = buildCategory(1L, "Food", "EXPENSE");
+            mine.setUser(currentUser);
+
+            when(userRepo.findByEmail(currentUser.getEmail())).thenReturn(Optional.of(currentUser));
+            when(categoryRepository.findByUser(currentUser)).thenReturn(List.of(mine));
+
+            CategoryResponse result = categoryService.getAll(currentUser.getEmail());
+
+            assertThat(result.getExpense()).extracting(CategoryResponse.CategoryData::getName).containsExactly("Food");
+            verify(categoryRepository).findByUser(currentUser);
+            verify(categoryRepository, never()).findByUser(otherUser);
+            verify(categoryRepository, never()).findAll();
+        }
+
+        /**
+         * TC-CAT-LIST-08 – Filter theo type cũng phải giới hạn theo user đang đăng nhập
+         */
+        @Test
+        @DisplayName("TC-CAT-LIST-08: findByType chỉ query category của user đang đăng nhập")
+        void findByType_scopedToCurrentUser() {
+            when(userRepo.findByEmail(currentUser.getEmail())).thenReturn(Optional.of(currentUser));
+            when(categoryRepository.findByUserAndType(currentUser, CategoryName.EXPENSE)).thenReturn(List.of());
+
+            categoryService.findByType("EXPENSE", currentUser.getEmail());
+
+            verify(categoryRepository).findByUserAndType(currentUser, CategoryName.EXPENSE);
+            verify(categoryRepository, never()).findByType(any());
+        }
+
+        /**
+         * TC-CAT-LIST-09 – Email không tồn tại → UsernameNotFoundException
+         */
+        @Test
+        @DisplayName("TC-CAT-LIST-09: User không tồn tại ném UsernameNotFoundException")
+        void getAllCategories_userNotFound_throws() {
+            when(userRepo.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> categoryService.getAll("ghost@example.com"))
+                    .isInstanceOf(UsernameNotFoundException.class);
+            verifyNoInteractions(categoryRepository);
         }
 
         private Category buildCategory(Long id, String name, String type) {
