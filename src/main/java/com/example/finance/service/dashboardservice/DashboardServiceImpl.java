@@ -5,6 +5,7 @@ import com.example.finance.entity.User;
 import com.example.finance.repo.TransactionRepo;
 import com.example.finance.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -40,7 +41,7 @@ public class DashboardServiceImpl implements DashboardService{
                 .toList();
 
 
-        List<DashboardResponse.recentTransactionsData> recentTransactions = transactionRepo.findTop3ByUserOrderByDateDesc(user)
+        List<DashboardResponse.recentTransactionsData> recentTransactions = transactionRepo.findRecentWithCategory(user, PageRequest.of(0, 3))
                 .stream()
                 .map(transaction -> new DashboardResponse.recentTransactionsData(
                         transaction.getId(),

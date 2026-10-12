@@ -63,7 +63,6 @@ public class TransactionServiceImpl implements TransactionService{
 
         List<TransactionResponse> trans = transactionRepo.findTransactionsHistory(user, type, startDate, endDate)
                 .stream()
-                .sorted((t1,t2) -> t2.getDate().compareTo(t1.getDate()))
                 .map(this::toResponse)
                 .toList();
 
