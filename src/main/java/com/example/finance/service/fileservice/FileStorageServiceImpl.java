@@ -1,5 +1,6 @@
 package com.example.finance.service.fileservice;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -9,7 +10,8 @@ import java.nio.file.Paths;
 
 @Service
 public class FileStorageServiceImpl implements FileStorageService{
-    private final String storagePath = "src/main/resources/static/reports/";
+    @Value("${app.report.storage-dir}")
+    private String storagePath;
 
     @Override
     public String saveFile(byte[] content, String fileName) {

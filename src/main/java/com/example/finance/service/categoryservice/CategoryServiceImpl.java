@@ -26,9 +26,10 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     @Override
-    public CategoryResponse getAll() {
-
-        List<Category> allCategories = categoryRepo.findAll();
+    public CategoryResponse getAll(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        List<Category> allCategories = categoryRepo.findByUser(user);
 
         List<CategoryResponse.CategoryData> incomeList = allCategories.stream()
                 .filter(cat -> cat.getType() == CategoryName.INCOME)
@@ -44,9 +45,12 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
-    public CategoryResponse findByType(String type) {
+    public CategoryResponse findByType(String type, String email) {
         CategoryName typeEnum = CategoryName.valueOf(type.toUpperCase());
-        List<Category> categories = categoryRepo.findByType(typeEnum);
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Category> categories = categoryRepo.findByUserAndType(user, CategoryName.valueOf(type.toUpperCase()));
 
         List<CategoryResponse.CategoryData> dataList = categories.stream()
                 .map(this::toCategoryData)

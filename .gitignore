@@ -1,4 +1,4 @@
-# Mật khẩu và thông tin nhạy cảm
+# Secrets
 .env
 .env.local
 .env.production
@@ -20,3 +20,6 @@ target/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated reports
+reports/
